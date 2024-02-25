@@ -5,13 +5,12 @@ import time
 import torch
 from os import path as osp
 
-from basicsr.data import build_dataloader, build_dataset
-from basicsr.data.data_sampler import EnlargedSampler
-from basicsr.data.prefetch_dataloader import CPUPrefetcher, CUDAPrefetcher
-from basicsr.models import build_model
-from basicsr.utils import (AvgTimer, MessageLogger, check_resume, get_env_info, get_root_logger, get_time_str,
-                           init_tb_logger, init_wandb_logger, make_exp_dirs, mkdir_and_rename, scandir)
-from basicsr.utils.options import copy_opt_file, dict2str, parse_options
+from .data import build_dataloader, build_dataset
+from .data.data_sampler import EnlargedSampler
+from .data.prefetch_dataloader import CPUPrefetcher, CUDAPrefetcher
+from .models import build_model
+from .utils import (AvgTimer, MessageLogger, check_resume, get_env_info, get_root_logger, get_time_str, init_tb_logger, init_wandb_logger, make_exp_dirs, mkdir_and_rename, scandir)
+from .utils.options import copy_opt_file, dict2str, parse_options
 
 
 def init_tb_loggers(opt):
@@ -88,9 +87,9 @@ def load_resume_state(opt):
     return resume_state
 
 
-def train_pipeline(root_path):
+def train_pipeline(params, root_path):
     # parse options, set distributed setting, set random seed
-    opt, args = parse_options(root_path, is_train=True)
+    opt = parse_options(params, root_path, is_train=True)
     opt['root_path'] = root_path
 
     torch.backends.cudnn.benchmark = True
@@ -105,7 +104,7 @@ def train_pipeline(root_path):
             mkdir_and_rename(osp.join(opt['root_path'], 'tb_logger', opt['name']))
 
     # copy the yml file to the experiment root
-    copy_opt_file(args.opt, opt['path']['experiments_root'])
+    copy_opt_file(params["opt"], opt['path']['experiments_root'])
 
     # WARNING: should not use get_root_logger in the above codes, including the called functions
     # Otherwise the logger will not be properly initialized

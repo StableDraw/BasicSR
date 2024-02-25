@@ -190,10 +190,10 @@ def get_env_info():
 
     Currently, only log the software version.
     """
-    import torch
-    import torchvision
+    from torch import version as t_version
+    from torchvision import version as tv_version
 
-    from basicsr.version import __version__
+    from ..version import __version__
     msg = r"""
                 ____                _       _____  ____
                / __ ) ____ _ _____ (_)_____/ ___/ / __ \
@@ -208,6 +208,6 @@ def get_env_info():
     """
     msg += ('\nVersion Information: '
             f'\n\tBasicSR: {__version__}'
-            f'\n\tPyTorch: {torch.__version__}'
-            f'\n\tTorchVision: {torchvision.__version__}')
+            f'\n\tPyTorch: {t_version}'
+            f'\n\tTorchVision: {tv_version}')
     return msg

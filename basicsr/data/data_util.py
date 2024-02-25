@@ -4,8 +4,8 @@ import torch
 from os import path as osp
 from torch.nn import functional as F
 
-from basicsr.data.transforms import mod_crop
-from basicsr.utils import img2tensor, scandir
+from .transforms import mod_crop
+from ..utils import img2tensor, scandir
 
 
 def read_img_seq(path, require_mod_crop=False, scale=1, return_imgname=False):
@@ -97,12 +97,10 @@ def paired_paths_from_lmdb(folders, keys):
 
     Contents of lmdb. Taking the `lq.lmdb` for example, the file structure is:
 
-    ::
-
-        lq.lmdb
-        ├── data.mdb
-        ├── lock.mdb
-        ├── meta_info.txt
+    lq.lmdb
+    ├── data.mdb
+    ├── lock.mdb
+    ├── meta_info.txt
 
     The data.mdb and lock.mdb are standard lmdb files and you can refer to
     https://lmdb.readthedocs.io/en/release/ for more details.

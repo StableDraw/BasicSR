@@ -8,10 +8,10 @@ import time
 import torch
 from torch.utils import data as data
 
-from basicsr.data.degradations import circular_lowpass_kernel, random_mixed_kernels
-from basicsr.data.transforms import augment
-from basicsr.utils import FileClient, get_root_logger, imfrombytes, img2tensor
-from basicsr.utils.registry import DATASET_REGISTRY
+from .degradations import circular_lowpass_kernel, random_mixed_kernels
+from .transforms import augment
+from ..utils import FileClient, get_root_logger, imfrombytes, img2tensor
+from ..utils.registry import DATASET_REGISTRY
 
 
 @DATASET_REGISTRY.register(suffix='basicsr')
@@ -39,6 +39,14 @@ class RealESRGANDataset(data.Dataset):
         self.file_client = None
         self.io_backend_opt = opt['io_backend']
         self.gt_folder = opt['dataroot_gt']
+
+        in_channels = opt['in_channels'] if 'in_channels' in opt else 3
+        if in_channels == 1:
+            self.flag = 'grayscale'
+        elif in_channels == 3:
+            self.flag = 'color'
+        else:
+            self.flag = 'unchanged'
 
         # file client (lmdb io backend)
         if self.io_backend_opt['type'] == 'lmdb':
@@ -104,7 +112,7 @@ class RealESRGANDataset(data.Dataset):
                 break
             finally:
                 retry -= 1
-        img_gt = imfrombytes(img_bytes, float32=True)
+        img_gt = imfrombytes(img_bytes, flag=self.flag, float32=True)
 
         # -------------------- Do augmentation for training: flip, rotation -------------------- #
         img_gt = augment(img_gt, self.opt['use_hflip'], self.opt['use_rot'])

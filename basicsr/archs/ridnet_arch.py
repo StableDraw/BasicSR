@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from basicsr.utils.registry import ARCH_REGISTRY
+from ..utils.registry import ARCH_REGISTRY
 from .arch_util import ResidualBlockNoBN, make_layer
 
 
@@ -32,6 +32,10 @@ class EResidualBlockNoBN(nn.Module):
     """Enhanced Residual block without BN.
 
     There are three convolution layers in residual branch.
+
+    It has a style of:
+        ---Conv-ReLU-Conv-ReLU-Conv-+-ReLU-
+         |__________________________|
     """
 
     def __init__(self, in_channels, out_channels):

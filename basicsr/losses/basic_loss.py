@@ -2,8 +2,8 @@ import torch
 from torch import nn as nn
 from torch.nn import functional as F
 
-from basicsr.archs.vgg_arch import VGGFeatureExtractor
-from basicsr.utils.registry import LOSS_REGISTRY
+from ..archs.vgg_arch import VGGFeatureExtractor
+from ..utils.registry import LOSS_REGISTRY
 from .loss_util import weighted_loss
 
 _reduction_modes = ['none', 'mean', 'sum']
@@ -174,7 +174,8 @@ class PerceptualLoss(nn.Module):
                  range_norm=False,
                  perceptual_weight=1.0,
                  style_weight=0.,
-                 criterion='l1'):
+                 criterion='l1',
+                 in_channels = 3):
         super(PerceptualLoss, self).__init__()
         self.perceptual_weight = perceptual_weight
         self.style_weight = style_weight
@@ -183,13 +184,14 @@ class PerceptualLoss(nn.Module):
             layer_name_list=list(layer_weights.keys()),
             vgg_type=vgg_type,
             use_input_norm=use_input_norm,
-            range_norm=range_norm)
+            range_norm=range_norm,
+            in_channels = in_channels)
 
         self.criterion_type = criterion
         if self.criterion_type == 'l1':
             self.criterion = torch.nn.L1Loss()
         elif self.criterion_type == 'l2':
-            self.criterion = torch.nn.MSELoss()
+            self.criterion = torch.nn.L2loss()
         elif self.criterion_type == 'fro':
             self.criterion = None
         else:

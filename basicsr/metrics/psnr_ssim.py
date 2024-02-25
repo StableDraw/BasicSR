@@ -3,16 +3,16 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from basicsr.metrics.metric_util import reorder_image, to_y_channel
-from basicsr.utils.color_util import rgb2ycbcr_pt
-from basicsr.utils.registry import METRIC_REGISTRY
+from .metric_util import reorder_image, to_y_channel
+from ..utils.color_util import rgb2ycbcr_pt
+from ..utils.registry import METRIC_REGISTRY
 
 
 @METRIC_REGISTRY.register()
 def calculate_psnr(img, img2, crop_border, input_order='HWC', test_y_channel=False, **kwargs):
     """Calculate PSNR (Peak Signal-to-Noise Ratio).
 
-    Reference: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
+    Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 
     Args:
         img (ndarray): Images with range [0, 255].
@@ -52,7 +52,7 @@ def calculate_psnr(img, img2, crop_border, input_order='HWC', test_y_channel=Fal
 def calculate_psnr_pt(img, img2, crop_border, test_y_channel=False, **kwargs):
     """Calculate PSNR (Peak Signal-to-Noise Ratio) (PyTorch version).
 
-    Reference: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
+    Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 
     Args:
         img (Tensor): Images with range [0, 1], shape (n, 3/1, h, w).
@@ -85,7 +85,8 @@ def calculate_psnr_pt(img, img2, crop_border, test_y_channel=False, **kwargs):
 def calculate_ssim(img, img2, crop_border, input_order='HWC', test_y_channel=False, **kwargs):
     """Calculate SSIM (structural similarity).
 
-    ``Paper: Image quality assessment: From error visibility to structural similarity``
+    Ref:
+    Image quality assessment: From error visibility to structural similarity
 
     The results are the same as that of the official released MATLAB code in
     https://ece.uwaterloo.ca/~z70wang/research/ssim/.
@@ -132,7 +133,8 @@ def calculate_ssim(img, img2, crop_border, input_order='HWC', test_y_channel=Fal
 def calculate_ssim_pt(img, img2, crop_border, test_y_channel=False, **kwargs):
     """Calculate SSIM (structural similarity) (PyTorch version).
 
-    ``Paper: Image quality assessment: From error visibility to structural similarity``
+    Ref:
+    Image quality assessment: From error visibility to structural similarity
 
     The results are the same as that of the official released MATLAB code in
     https://ece.uwaterloo.ca/~z70wang/research/ssim/.

@@ -3,9 +3,9 @@ import torch
 from pathlib import Path
 from torch.utils import data as data
 
-from basicsr.data.transforms import augment, paired_random_crop
-from basicsr.utils import FileClient, get_root_logger, imfrombytes, img2tensor
-from basicsr.utils.registry import DATASET_REGISTRY
+from .transforms import augment, paired_random_crop
+from ..utils import FileClient, get_root_logger, imfrombytes, img2tensor
+from ..utils.registry import DATASET_REGISTRY
 
 
 @DATASET_REGISTRY.register()
@@ -15,45 +15,38 @@ class Vimeo90KDataset(data.Dataset):
     The keys are generated from a meta info txt file.
     basicsr/data/meta_info/meta_info_Vimeo90K_train_GT.txt
 
-    Each line contains the following items, separated by a white space.
-
-    1. clip name;
-    2. frame number;
-    3. image shape
-
+    Each line contains:
+    1. clip name; 2. frame number; 3. image shape, separated by a white space.
     Examples:
-
-    ::
-
         00001/0001 7 (256,448,3)
         00001/0002 7 (256,448,3)
 
-    - Key examples: "00001/0001"
-    - GT (gt): Ground-Truth;
-    - LQ (lq): Low-Quality, e.g., low-resolution/blurry/noisy/compressed frames.
+    Key examples: "00001/0001"
+    GT (gt): Ground-Truth;
+    LQ (lq): Low-Quality, e.g., low-resolution/blurry/noisy/compressed frames.
 
     The neighboring frame list for different num_frame:
-
-    ::
-
-        num_frame | frame list
-                1 | 4
-                3 | 3,4,5
-                5 | 2,3,4,5,6
-                7 | 1,2,3,4,5,6,7
+    num_frame | frame list
+             1 | 4
+             3 | 3,4,5
+             5 | 2,3,4,5,6
+             7 | 1,2,3,4,5,6,7
 
     Args:
         opt (dict): Config for train dataset. It contains the following keys:
-        dataroot_gt (str): Data root path for gt.
-        dataroot_lq (str): Data root path for lq.
-        meta_info_file (str): Path for meta information file.
-        io_backend (dict): IO backend type and other kwarg.
-        num_frame (int): Window size for input frames.
-        gt_size (int): Cropped patched size for gt patches.
-        random_reverse (bool): Random reverse input frames.
-        use_hflip (bool): Use horizontal flips.
-        use_rot (bool): Use rotation (use vertical flip and transposing h and w for implementation).
-        scale (bool): Scale, which will be added automatically.
+            dataroot_gt (str): Data root path for gt.
+            dataroot_lq (str): Data root path for lq.
+            meta_info_file (str): Path for meta information file.
+            io_backend (dict): IO backend type and other kwarg.
+
+            num_frame (int): Window size for input frames.
+            gt_size (int): Cropped patched size for gt patches.
+            random_reverse (bool): Random reverse input frames.
+            use_hflip (bool): Use horizontal flips.
+            use_rot (bool): Use rotation (use vertical flip and transposing h
+                and w for implementation).
+
+            scale (bool): Scale, which will be added automatically.
     """
 
     def __init__(self, opt):
@@ -72,6 +65,16 @@ class Vimeo90KDataset(data.Dataset):
             self.is_lmdb = True
             self.io_backend_opt['db_paths'] = [self.lq_root, self.gt_root]
             self.io_backend_opt['client_keys'] = ['lq', 'gt']
+
+        
+        in_channels = opt['in_channels'] if 'in_channels' in opt else 3
+        if in_channels == 1:
+            self.flag = 'grayscale'
+        elif in_channels == 3:
+            self.flag = 'color'
+        else:
+            self.flag = 'unchanged'
+
 
         # indices of input images
         self.neighbor_list = [i + (9 - opt['num_frame']) // 2 for i in range(opt['num_frame'])]
@@ -100,7 +103,7 @@ class Vimeo90KDataset(data.Dataset):
         else:
             img_gt_path = self.gt_root / clip / seq / 'im4.png'
         img_bytes = self.file_client.get(img_gt_path, 'gt')
-        img_gt = imfrombytes(img_bytes, float32=True)
+        img_gt = imfrombytes(img_bytes, flag=self.flag, float32=True)
 
         # get the neighboring LQ frames
         img_lqs = []
@@ -110,7 +113,7 @@ class Vimeo90KDataset(data.Dataset):
             else:
                 img_lq_path = self.lq_root / clip / seq / f'im{neighbor}.png'
             img_bytes = self.file_client.get(img_lq_path, 'lq')
-            img_lq = imfrombytes(img_bytes, float32=True)
+            img_lq = imfrombytes(img_bytes, flag=self.flag, float32=True)
             img_lqs.append(img_lq)
 
         # randomly crop
@@ -167,10 +170,10 @@ class Vimeo90KRecurrentDataset(Vimeo90KDataset):
                 img_gt_path = self.gt_root / clip / seq / f'im{neighbor}.png'
             # LQ
             img_bytes = self.file_client.get(img_lq_path, 'lq')
-            img_lq = imfrombytes(img_bytes, float32=True)
+            img_lq = imfrombytes(img_bytes, flag=self.flag, float32=True)
             # GT
             img_bytes = self.file_client.get(img_gt_path, 'gt')
-            img_gt = imfrombytes(img_bytes, float32=True)
+            img_gt = imfrombytes(img_bytes, flag=self.flag, float32=True)
 
             img_lqs.append(img_lq)
             img_gts.append(img_gt)

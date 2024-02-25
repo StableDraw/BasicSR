@@ -5,7 +5,7 @@ import random
 import torch
 from scipy import special
 from scipy.stats import multivariate_normal
-from torchvision.transforms.functional_tensor import rgb_to_grayscale
+from torchvision.transforms.functional import rgb_to_grayscale
 
 # -------------------------------------------------------------------- #
 # --------------------------- blur kernels --------------------------- #
@@ -111,8 +111,9 @@ def bivariate_Gaussian(kernel_size, sig_x, sig_y, theta, grid=None, isotropic=Tr
 
 def bivariate_generalized_Gaussian(kernel_size, sig_x, sig_y, theta, beta, grid=None, isotropic=True):
     """Generate a bivariate generalized Gaussian kernel.
-
-    ``Paper: Parameter Estimation For Multivariate Generalized Gaussian Distributions``
+        Described in `Parameter Estimation For Multivariate Generalized
+        Gaussian Distributions`_
+        by Pascal et. al (2013).
 
     In the isotropic mode, only `sig_x` is used. `sig_y` and `theta` is ignored.
 
@@ -127,6 +128,9 @@ def bivariate_generalized_Gaussian(kernel_size, sig_x, sig_y, theta, beta, grid=
 
     Returns:
         kernel (ndarray): normalized kernel.
+
+    .. _Parameter Estimation For Multivariate Generalized Gaussian
+    Distributions: https://arxiv.org/abs/1302.6498
     """
     if grid is None:
         grid, _, _ = mesh_grid(kernel_size)
@@ -142,10 +146,9 @@ def bivariate_generalized_Gaussian(kernel_size, sig_x, sig_y, theta, beta, grid=
 
 def bivariate_plateau(kernel_size, sig_x, sig_y, theta, beta, grid=None, isotropic=True):
     """Generate a plateau-like anisotropic kernel.
-
     1 / (1+x^(beta))
 
-    Reference: https://stats.stackexchange.com/questions/203629/is-there-a-plateau-shaped-distribution
+    Ref: https://stats.stackexchange.com/questions/203629/is-there-a-plateau-shaped-distribution
 
     In the isotropic mode, only `sig_x` is used. `sig_y` and `theta` is ignored.
 
@@ -387,9 +390,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 def circular_lowpass_kernel(cutoff, kernel_size, pad_to=0):
-    """2D sinc filter
-
-    Reference: https://dsp.stackexchange.com/questions/58301/2-d-circularly-symmetric-low-pass-filter
+    """2D sinc filter, ref: https://dsp.stackexchange.com/questions/58301/2-d-circularly-symmetric-low-pass-filter
 
     Args:
         cutoff (float): cutoff frequency in radians (pi is max)
@@ -559,7 +560,7 @@ def random_add_gaussian_noise_pt(img, sigma_range=(0, 1.0), gray_prob=0, clip=Tr
 def generate_poisson_noise(img, scale=1.0, gray_noise=False):
     """Generate poisson noise.
 
-    Reference: https://github.com/scikit-image/scikit-image/blob/main/skimage/util/noise.py#L37-L219
+    Ref: https://github.com/scikit-image/scikit-image/blob/main/skimage/util/noise.py#L37-L219
 
     Args:
         img (Numpy array): Input image, shape (h, w, c), range [0, 1], float32.

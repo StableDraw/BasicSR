@@ -4,7 +4,7 @@ from torch import autograd as autograd
 from torch import nn as nn
 from torch.nn import functional as F
 
-from basicsr.utils.registry import LOSS_REGISTRY
+from ..utils.registry import LOSS_REGISTRY
 
 
 @LOSS_REGISTRY.register()
@@ -149,7 +149,8 @@ def r1_penalty(real_pred, real_img):
         a non-zero gradient orthogonal to the data manifold without
         suffering a loss in the GAN game.
 
-        Reference: Eq. 9 in Which training methods for GANs do actually converge.
+        Ref:
+        Eq. 9 in Which training methods for GANs do actually converge.
         """
     grad_real = autograd.grad(outputs=real_pred.sum(), inputs=real_img, create_graph=True)[0]
     grad_penalty = grad_real.pow(2).view(grad_real.shape[0], -1).sum(1).mean()

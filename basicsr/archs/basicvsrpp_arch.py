@@ -1,27 +1,26 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
+from torchvision.ops import deform_conv2d
 import warnings
 
-from basicsr.archs.arch_util import flow_warp
-from basicsr.archs.basicvsr_arch import ConvResidualBlocks
-from basicsr.archs.spynet_arch import SpyNet
-from basicsr.ops.dcn import ModulatedDeformConvPack
-from basicsr.utils.registry import ARCH_REGISTRY
+from .arch_util import flow_warp
+from .basicvsr_arch import ConvResidualBlocks
+from .spynet_arch import SpyNet
+from ..ops.dcn import ModulatedDeformConvPack
+from ..utils.registry import ARCH_REGISTRY
 
 
 @ARCH_REGISTRY.register()
 class BasicVSRPlusPlus(nn.Module):
     """BasicVSR++ network structure.
-
     Support either x4 upsampling or same size output. Since DCN is used in this
     model, it can only be used with CUDA enabled. If CUDA is not enabled,
     feature alignment will be skipped. Besides, we adopt the official DCN
     implementation and the version of torch need to be higher than 1.9.
-
-    ``Paper: BasicVSR++: Improving Video Super-Resolution with Enhanced Propagation and Alignment``
-
+    Paper:
+        BasicVSR++: Improving Video Super-Resolution with Enhanced Propagation
+        and Alignment
     Args:
         mid_channels (int, optional): Channel number of the intermediate
             features. Default: 64.
@@ -108,11 +107,11 @@ class BasicVSRPlusPlus(nn.Module):
 
     def check_if_mirror_extended(self, lqs):
         """Check whether the input is a mirror-extended sequence.
-
-        If mirror-extended, the i-th (i=0, ..., t-1) frame is equal to the (t-1-i)-th frame.
-
+        If mirror-extended, the i-th (i=0, ..., t-1) frame is equal to the
+        (t-1-i)-th frame.
         Args:
-            lqs (tensor): Input low quality (LQ) sequence with shape (n, t, c, h, w).
+            lqs (tensor): Input low quality (LQ) sequence with
+                shape (n, t, c, h, w).
         """
 
         if lqs.size(1) % 2 == 0:
@@ -122,18 +121,16 @@ class BasicVSRPlusPlus(nn.Module):
 
     def compute_flow(self, lqs):
         """Compute optical flow using SPyNet for feature alignment.
-
         Note that if the input is an mirror-extended sequence, 'flows_forward'
         is not needed, since it is equal to 'flows_backward.flip(1)'.
-
         Args:
             lqs (tensor): Input low quality (LQ) sequence with
                 shape (n, t, c, h, w).
-
         Return:
-            tuple(Tensor): Optical flow. 'flows_forward' corresponds to the flows used for forward-time propagation \
-                (current to previous). 'flows_backward' corresponds to the flows used for backward-time \
-                propagation (current to next).
+            tuple(Tensor): Optical flow. 'flows_forward' corresponds to the
+                flows used for forward-time propagation (current to previous).
+                'flows_backward' corresponds to the flows used for
+                backward-time propagation (current to next).
         """
 
         n, t, c, h, w = lqs.size()
@@ -155,17 +152,15 @@ class BasicVSRPlusPlus(nn.Module):
 
     def propagate(self, feats, flows, module_name):
         """Propagate the latent features throughout the sequence.
-
         Args:
             feats dict(list[tensor]): Features from previous branches. Each
                 component is a list of tensors with shape (n, c, h, w).
             flows (tensor): Optical flows with shape (n, t - 1, 2, h, w).
             module_name (str): The name of the propgation branches. Can either
                 be 'backward_1', 'forward_1', 'backward_2', 'forward_2'.
-
         Return:
-            dict(list[tensor]): A dictionary containing all the propagated \
-                features. Each key in the dictionary corresponds to a \
+            dict(list[tensor]): A dictionary containing all the propagated
+                features. Each key in the dictionary corresponds to a
                 propagation branch, which is represented by a list of tensors.
         """
 
@@ -236,12 +231,10 @@ class BasicVSRPlusPlus(nn.Module):
 
     def upsample(self, lqs, feats):
         """Compute the output image given the features.
-
         Args:
             lqs (tensor): Input low quality (LQ) sequence with
                 shape (n, t, c, h, w).
-            feats (dict): The features from the propagation branches.
-
+            feats (dict): The features from the propgation branches.
         Returns:
             Tensor: Output HR sequence with shape (n, t, c, 4h, 4w).
         """
@@ -279,11 +272,9 @@ class BasicVSRPlusPlus(nn.Module):
 
     def forward(self, lqs):
         """Forward function for BasicVSR++.
-
         Args:
             lqs (tensor): Input low quality (LQ) sequence with
                 shape (n, t, c, h, w).
-
         Returns:
             Tensor: Output HR sequence with shape (n, t, c, 4h, 4w).
         """
@@ -346,7 +337,6 @@ class BasicVSRPlusPlus(nn.Module):
 
 class SecondOrderDeformableAlignment(ModulatedDeformConvPack):
     """Second-order deformable alignment module.
-
     Args:
         in_channels (int): Same as nn.Conv2d.
         out_channels (int): Same as nn.Conv2d.
@@ -404,7 +394,7 @@ class SecondOrderDeformableAlignment(ModulatedDeformConvPack):
         # mask
         mask = torch.sigmoid(mask)
 
-        return torchvision.ops.deform_conv2d(x, offset, self.weight, self.bias, self.stride, self.padding,
+        return deform_conv2d(x, offset, self.weight, self.bias, self.stride, self.padding,
                                              self.dilation, mask)
 
 

@@ -2,9 +2,9 @@ from os import path as osp
 from torch.utils import data as data
 from torchvision.transforms.functional import normalize
 
-from basicsr.data.data_util import paths_from_lmdb
-from basicsr.utils import FileClient, imfrombytes, img2tensor, rgb2ycbcr, scandir
-from basicsr.utils.registry import DATASET_REGISTRY
+from .data_util import paths_from_lmdb
+from ..utils import FileClient, imfrombytes, img2tensor, rgb2ycbcr, scandir
+from ..utils.registry import DATASET_REGISTRY
 
 
 @DATASET_REGISTRY.register()
@@ -34,6 +34,14 @@ class SingleImageDataset(data.Dataset):
         self.std = opt['std'] if 'std' in opt else None
         self.lq_folder = opt['dataroot_lq']
 
+        in_channels = opt['in_channels'] if 'in_channels' in opt else 3
+        if in_channels == 1:
+            self.flag = 'grayscale'
+        elif in_channels == 3:
+            self.flag = 'color'
+        else:
+            self.flag = 'unchanged'
+
         if self.io_backend_opt['type'] == 'lmdb':
             self.io_backend_opt['db_paths'] = [self.lq_folder]
             self.io_backend_opt['client_keys'] = ['lq']
@@ -51,7 +59,7 @@ class SingleImageDataset(data.Dataset):
         # load lq image
         lq_path = self.paths[index]
         img_bytes = self.file_client.get(lq_path, 'lq')
-        img_lq = imfrombytes(img_bytes, float32=True)
+        img_lq = imfrombytes(img_bytes, flag=self.flag, float32=True)
 
         # color space transform
         if 'color' in self.opt and self.opt['color'] == 'y':

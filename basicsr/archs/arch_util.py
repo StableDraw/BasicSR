@@ -1,7 +1,8 @@
 import collections.abc
 import math
 import torch
-import torchvision
+from torchvision import version as tv_version
+from torchvision.ops import deform_conv2d
 import warnings
 from distutils.version import LooseVersion
 from itertools import repeat
@@ -10,8 +11,8 @@ from torch.nn import functional as F
 from torch.nn import init as init
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from basicsr.ops.dcn import ModulatedDeformConvPack, modulated_deform_conv
-from basicsr.utils import get_root_logger
+from ..ops.dcn import ModulatedDeformConvPack, modulated_deform_conv
+from ..utils import get_root_logger
 
 
 @torch.no_grad()
@@ -63,6 +64,10 @@ def make_layer(basic_block, num_basic_block, **kwarg):
 
 class ResidualBlockNoBN(nn.Module):
     """Residual block without BN.
+
+    It has a style of:
+        ---Conv-ReLU-Conv-+-
+         |________________|
 
     Args:
         num_feat (int): Channel number of intermediate features.
@@ -209,7 +214,8 @@ class DCNv2Pack(ModulatedDeformConvPack):
     from the preceding features, this DCNv2Pack takes another different
     features to generate offsets and masks.
 
-    ``Paper: Delving Deep into Deformable Alignment in Video Super-Resolution``
+    Ref:
+        Delving Deep into Deformable Alignment in Video Super-Resolution.
     """
 
     def forward(self, x, feat):
@@ -223,8 +229,8 @@ class DCNv2Pack(ModulatedDeformConvPack):
             logger = get_root_logger()
             logger.warning(f'Offset abs mean is {offset_absmean}, larger than 50.')
 
-        if LooseVersion(torchvision.__version__) >= LooseVersion('0.9.0'):
-            return torchvision.ops.deform_conv2d(x, offset, self.weight, self.bias, self.stride, self.padding,
+        if LooseVersion(tv_version) >= LooseVersion('0.9.0'):
+            return deform_conv2d(x, offset, self.weight, self.bias, self.stride, self.padding,
                                                  self.dilation, mask)
         else:
             return modulated_deform_conv(x, offset, mask, self.weight, self.bias, self.stride, self.padding,

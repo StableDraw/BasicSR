@@ -7,7 +7,8 @@ from torch.utils.data import DataLoader
 class PrefetchGenerator(threading.Thread):
     """A general prefetch generator.
 
-    Reference: https://stackoverflow.com/questions/7323664/python-generator-pre-fetch
+    Ref:
+    https://stackoverflow.com/questions/7323664/python-generator-pre-fetch
 
     Args:
         generator: Python generator.
@@ -39,7 +40,8 @@ class PrefetchGenerator(threading.Thread):
 class PrefetchDataLoader(DataLoader):
     """Prefetch version of dataloader.
 
-    Reference: https://github.com/IgorSusmelj/pytorch-styleguide/issues/5#
+    Ref:
+    https://github.com/IgorSusmelj/pytorch-styleguide/issues/5#
 
     TODO:
     Need to test on single gpu and ddp (multi-gpu). There is a known issue in
@@ -82,9 +84,10 @@ class CPUPrefetcher():
 class CUDAPrefetcher():
     """CUDA prefetcher.
 
-    Reference: https://github.com/NVIDIA/apex/issues/304#
+    Ref:
+    https://github.com/NVIDIA/apex/issues/304#
 
-    It may consume more GPU memory.
+    It may consums more GPU memory.
 
     Args:
         loader: Dataloader.

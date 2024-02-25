@@ -2,12 +2,12 @@ import cv2
 import math
 import numpy as np
 import os
-from scipy.ndimage import convolve
+from scipy.ndimage.filters import convolve
 from scipy.special import gamma
 
-from basicsr.metrics.metric_util import reorder_image, to_y_channel
-from basicsr.utils.matlab_functions import imresize
-from basicsr.utils.registry import METRIC_REGISTRY
+from .metric_util import reorder_image, to_y_channel
+from ..utils.matlab_functions import imresize
+from ..utils.registry import METRIC_REGISTRY
 
 
 def estimate_aggd_param(block):
@@ -68,8 +68,7 @@ def compute_feature(block):
 def niqe(img, mu_pris_param, cov_pris_param, gaussian_window, block_size_h=96, block_size_w=96):
     """Calculate NIQE (Natural Image Quality Evaluator) metric.
 
-    ``Paper: Making a "Completely Blind" Image Quality Analyzer``
-
+    Ref: Making a "Completely Blind" Image Quality Analyzer.
     This implementation could produce almost the same results as the official
     MATLAB codes: http://live.ece.utexas.edu/research/quality/niqe_release.zip
 
@@ -145,8 +144,7 @@ def niqe(img, mu_pris_param, cov_pris_param, gaussian_window, block_size_h=96, b
 def calculate_niqe(img, crop_border, input_order='HWC', convert_to='y', **kwargs):
     """Calculate NIQE (Natural Image Quality Evaluator) metric.
 
-    ``Paper: Making a "Completely Blind" Image Quality Analyzer``
-
+    Ref: Making a "Completely Blind" Image Quality Analyzer.
     This implementation could produce almost the same results as the official
     MATLAB codes: http://live.ece.utexas.edu/research/quality/niqe_release.zip
 

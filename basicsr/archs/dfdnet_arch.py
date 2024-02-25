@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.spectral_norm import spectral_norm
 
-from basicsr.utils.registry import ARCH_REGISTRY
+from ..utils.registry import ARCH_REGISTRY
 from .dfdnet_util import AttentionBlock, Blur, MSDilationBlock, UpResBlock, adaptive_instance_normalization
 from .vgg_arch import VGGFeatureExtractor
 
@@ -64,7 +64,7 @@ class DFDNet(nn.Module):
         dict_path (str): Path to the facial component dictionary.
     """
 
-    def __init__(self, num_feat, dict_path):
+    def __init__(self, num_feat, dict_path, in_channels = 3):
         super().__init__()
         self.parts = ['left_eye', 'right_eye', 'nose', 'mouth']
         # part_sizes: [80, 80, 50, 110]
@@ -82,7 +82,8 @@ class DFDNet(nn.Module):
             vgg_type='vgg19',
             use_input_norm=True,
             range_norm=True,
-            requires_grad=False)
+            requires_grad=False,
+            in_channels = in_channels)
 
         # attention block for fusing dictionary features and input features
         self.attn_blocks = nn.ModuleDict()

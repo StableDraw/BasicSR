@@ -2,7 +2,7 @@ import torch
 from torch import nn as nn
 from torch.nn import functional as F
 
-from basicsr.utils.registry import ARCH_REGISTRY
+from ..utils.registry import ARCH_REGISTRY
 from .arch_util import DCNv2Pack, ResidualBlockNoBN, make_layer
 
 
@@ -10,7 +10,8 @@ class PCDAlignment(nn.Module):
     """Alignment module using Pyramid, Cascading and Deformable convolution
     (PCD). It is used in EDVR.
 
-    ``Paper: EDVR: Video Restoration with Enhanced Deformable Convolutional Networks``
+    Ref:
+        EDVR: Video Restoration with Enhanced Deformable Convolutional Networks
 
     Args:
         num_feat (int): Channel number of middle features. Default: 64.
@@ -247,8 +248,8 @@ class EDVR(nn.Module):
     """EDVR network structure for video super-resolution.
 
     Now only support X4 upsampling factor.
-
-    ``Paper: EDVR: Video Restoration with Enhanced Deformable Convolutional Networks``
+    Paper:
+        EDVR: Video Restoration with Enhanced Deformable Convolutional Networks
 
     Args:
         num_in_ch (int): Channel number of input image. Default: 3.

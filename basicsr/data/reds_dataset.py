@@ -4,10 +4,10 @@ import torch
 from pathlib import Path
 from torch.utils import data as data
 
-from basicsr.data.transforms import augment, paired_random_crop
-from basicsr.utils import FileClient, get_root_logger, imfrombytes, img2tensor
-from basicsr.utils.flow_util import dequantize_flow
-from basicsr.utils.registry import DATASET_REGISTRY
+from .transforms import augment, paired_random_crop
+from ..utils import FileClient, get_root_logger, imfrombytes, img2tensor
+from ..utils.flow_util import dequantize_flow
+from ..utils.registry import DATASET_REGISTRY
 
 
 @DATASET_REGISTRY.register()
@@ -31,19 +31,23 @@ class REDSDataset(data.Dataset):
 
     Args:
         opt (dict): Config for train dataset. It contains the following keys:
-        dataroot_gt (str): Data root path for gt.
-        dataroot_lq (str): Data root path for lq.
-        dataroot_flow (str, optional): Data root path for flow.
-        meta_info_file (str): Path for meta information file.
-        val_partition (str): Validation partition types. 'REDS4' or 'official'.
-        io_backend (dict): IO backend type and other kwarg.
-        num_frame (int): Window size for input frames.
-        gt_size (int): Cropped patched size for gt patches.
-        interval_list (list): Interval list for temporal augmentation.
-        random_reverse (bool): Random reverse input frames.
-        use_hflip (bool): Use horizontal flips.
-        use_rot (bool): Use rotation (use vertical flip and transposing h and w for implementation).
-        scale (bool): Scale, which will be added automatically.
+            dataroot_gt (str): Data root path for gt.
+            dataroot_lq (str): Data root path for lq.
+            dataroot_flow (str, optional): Data root path for flow.
+            meta_info_file (str): Path for meta information file.
+            val_partition (str): Validation partition types. 'REDS4' or
+                'official'.
+            io_backend (dict): IO backend type and other kwarg.
+
+            num_frame (int): Window size for input frames.
+            gt_size (int): Cropped patched size for gt patches.
+            interval_list (list): Interval list for temporal augmentation.
+            random_reverse (bool): Random reverse input frames.
+            use_hflip (bool): Use horizontal flips.
+            use_rot (bool): Use rotation (use vertical flip and transposing h
+                and w for implementation).
+
+            scale (bool): Scale, which will be added automatically.
     """
 
     def __init__(self, opt):
@@ -54,6 +58,14 @@ class REDSDataset(data.Dataset):
         assert opt['num_frame'] % 2 == 1, (f'num_frame should be odd number, but got {opt["num_frame"]}')
         self.num_frame = opt['num_frame']
         self.num_half_frames = opt['num_frame'] // 2
+
+        in_channels = opt['in_channels'] if 'in_channels' in opt else 3
+        if in_channels == 1:
+            self.flag = 'grayscale'
+        elif in_channels == 3:
+            self.flag = 'color'
+        else:
+            self.flag = 'unchanged'
 
         self.keys = []
         with open(opt['meta_info_file'], 'r') as fin:
@@ -127,7 +139,7 @@ class REDSDataset(data.Dataset):
         else:
             img_gt_path = self.gt_root / clip_name / f'{frame_name}.png'
         img_bytes = self.file_client.get(img_gt_path, 'gt')
-        img_gt = imfrombytes(img_bytes, float32=True)
+        img_gt = imfrombytes(img_bytes, flag=self.flag, float32=True)
 
         # get the neighboring LQ frames
         img_lqs = []
@@ -137,7 +149,7 @@ class REDSDataset(data.Dataset):
             else:
                 img_lq_path = self.lq_root / clip_name / f'{neighbor:08d}.png'
             img_bytes = self.file_client.get(img_lq_path, 'lq')
-            img_lq = imfrombytes(img_bytes, float32=True)
+            img_lq = imfrombytes(img_bytes, flag=self.flag, float32=True)
             img_lqs.append(img_lq)
 
         # get flows
@@ -226,19 +238,23 @@ class REDSRecurrentDataset(data.Dataset):
 
     Args:
         opt (dict): Config for train dataset. It contains the following keys:
-        dataroot_gt (str): Data root path for gt.
-        dataroot_lq (str): Data root path for lq.
-        dataroot_flow (str, optional): Data root path for flow.
-        meta_info_file (str): Path for meta information file.
-        val_partition (str): Validation partition types. 'REDS4' or 'official'.
-        io_backend (dict): IO backend type and other kwarg.
-        num_frame (int): Window size for input frames.
-        gt_size (int): Cropped patched size for gt patches.
-        interval_list (list): Interval list for temporal augmentation.
-        random_reverse (bool): Random reverse input frames.
-        use_hflip (bool): Use horizontal flips.
-        use_rot (bool): Use rotation (use vertical flip and transposing h and w for implementation).
-        scale (bool): Scale, which will be added automatically.
+            dataroot_gt (str): Data root path for gt.
+            dataroot_lq (str): Data root path for lq.
+            dataroot_flow (str, optional): Data root path for flow.
+            meta_info_file (str): Path for meta information file.
+            val_partition (str): Validation partition types. 'REDS4' or
+                'official'.
+            io_backend (dict): IO backend type and other kwarg.
+
+            num_frame (int): Window size for input frames.
+            gt_size (int): Cropped patched size for gt patches.
+            interval_list (list): Interval list for temporal augmentation.
+            random_reverse (bool): Random reverse input frames.
+            use_hflip (bool): Use horizontal flips.
+            use_rot (bool): Use rotation (use vertical flip and transposing h
+                and w for implementation).
+
+            scale (bool): Scale, which will be added automatically.
     """
 
     def __init__(self, opt):
@@ -324,12 +340,12 @@ class REDSRecurrentDataset(data.Dataset):
 
             # get LQ
             img_bytes = self.file_client.get(img_lq_path, 'lq')
-            img_lq = imfrombytes(img_bytes, float32=True)
+            img_lq = imfrombytes(img_bytes, flag=self.flag, float32=True)
             img_lqs.append(img_lq)
 
             # get GT
             img_bytes = self.file_client.get(img_gt_path, 'gt')
-            img_gt = imfrombytes(img_bytes, float32=True)
+            img_gt = imfrombytes(img_bytes, flag=self.flag, float32=True)
             img_gts.append(img_gt)
 
         # randomly crop

@@ -6,7 +6,7 @@ import torch
 from torchvision.utils import make_grid
 
 
-def img2tensor(imgs, bgr2rgb=True, float32=True):
+def img2tensor(imgs, bgr2rgb = True, float32 = True):
     """Numpy array to tensor.
 
     Args:
@@ -20,10 +20,13 @@ def img2tensor(imgs, bgr2rgb=True, float32=True):
     """
 
     def _totensor(img, bgr2rgb, float32):
-        if img.shape[2] == 3 and bgr2rgb:
+        if bgr2rgb:
             if img.dtype == 'float64':
                 img = img.astype('float32')
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            if img.shape[2] == 4:
+                img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
+            else:
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         img = torch.from_numpy(img.transpose(2, 0, 1))
         if float32:
             img = img.float()
@@ -71,15 +74,19 @@ def tensor2img(tensor, rgb2bgr=True, out_type=np.uint8, min_max=(0, 1)):
             img_np = make_grid(_tensor, nrow=int(math.sqrt(_tensor.size(0))), normalize=False).numpy()
             img_np = img_np.transpose(1, 2, 0)
             if rgb2bgr:
+                
                 img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
         elif n_dim == 3:
             img_np = _tensor.numpy()
             img_np = img_np.transpose(1, 2, 0)
-            if img_np.shape[2] == 1:  # gray image
-                img_np = np.squeeze(img_np, axis=2)
+            if len(img_np.shape) == 2:  # gray image
+                img_np = np.squeeze(img_np, axis = 2)
             else:
                 if rgb2bgr:
-                    img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+                    if img_np.shape[2] == 3:
+                        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+                    else:
+                        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGBA2BGRA)
         elif n_dim == 2:
             img_np = _tensor.numpy()
         else:
@@ -107,7 +114,12 @@ def tensor2img_fast(tensor, rgb2bgr=True, min_max=(0, 1)):
     output = (output - min_max[0]) / (min_max[1] - min_max[0]) * 255
     output = output.type(torch.uint8).cpu().numpy()
     if rgb2bgr:
-        output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
+        if len(output.shape) == 2:
+            output = cv2.bitwise_not(output)
+        elif output.shape[2] == 3:
+            output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
+        else:
+            output = cv2.cvtColor(output, cv2.COLOR_RGBA2BGRA)
     return output
 
 
