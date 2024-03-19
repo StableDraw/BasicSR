@@ -3,7 +3,7 @@ import torch
 import wget
 from collections import OrderedDict
 from torch import nn as nn
-from ...torchvision.models import vgg as vgg
+from .vgg import VGG as vgg
 from ..utils.registry import ARCH_REGISTRY
 
 VGG_PRETRAIN_PATH = 'experiments\\pretrained_models\\'
